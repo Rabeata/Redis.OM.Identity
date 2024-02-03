@@ -1,10 +1,10 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.AspNetCore.Identity;
 using Redis.OM.Modeling;
-using System;
 
-namespace Microsoft.AspNetCore.Identity;
+namespace Redis.OM.Identity.Models;
 
 
 /// <summary>

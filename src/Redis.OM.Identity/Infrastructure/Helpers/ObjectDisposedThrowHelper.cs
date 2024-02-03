@@ -3,9 +3,8 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
-namespace Microsoft.AspNetCore.Shared;
+namespace Redis.OM.Identity.Infrastructure.Helpers;
 
 #nullable enable
 

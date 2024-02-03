@@ -4,12 +4,12 @@
 using Redis.OM.Modeling;
 using System;
 
-namespace Microsoft.AspNetCore.Identity;
+namespace Redis.OM.Identity.Models;
 
 /// <summary>
 /// Represents a role in the identity system
 /// </summary>
-[Document(StorageType = StorageType.Json,IdGenerationStrategyName = "Uuid4IdGenerationStrategy", Prefixes = new[] { nameof(IdentityRole) })]
+[Document(StorageType = StorageType.Json, IdGenerationStrategyName = "Uuid4IdGenerationStrategy", Prefixes = new[] { nameof(IdentityRole) })]
 public class IdentityRole
 {
     /// <summary>

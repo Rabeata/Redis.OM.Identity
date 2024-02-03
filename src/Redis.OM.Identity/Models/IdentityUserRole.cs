@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Redis.OM.Modeling;
-using System;
 
-namespace Microsoft.AspNetCore.Identity;
+namespace Redis.OM.Identity.Models;
 
 /// <summary>
 /// Represents the link between a user and a role.

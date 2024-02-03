@@ -4,7 +4,7 @@
 using Redis.OM.Modeling;
 using System;
 
-namespace Microsoft.AspNetCore.Identity;
+namespace Redis.OM.Identity.Models;
 
 /// <summary>
 /// Represents a login and its associated provider for a user.

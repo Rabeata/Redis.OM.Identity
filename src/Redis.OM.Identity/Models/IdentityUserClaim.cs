@@ -5,7 +5,7 @@ using Redis.OM.Modeling;
 using System;
 using System.Security.Claims;
 
-namespace Microsoft.AspNetCore.Identity;
+namespace Redis.OM.Identity.Models;
 
 /// <summary>
 /// Represents a claim that a user possesses.
