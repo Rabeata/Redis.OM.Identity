@@ -6,10 +6,29 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>Redis OM Identity</Title>
-    <Version>0.1</Version>
+    <Version>0.1.1</Version>
     <Authors>Rabea Altaradeh</Authors>
     <Company>Inab Technologies</Company>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageIcon>redis.jpg</PackageIcon>
+    <RepositoryUrl>https://github.com/Rabeata/Redis.OM.Identity</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Redis OM Identity</PackageTags>
+    <PackageProjectUrl>https://github.com/Rabeata/Redis.OM.Identity</PackageProjectUrl>
+    <Copyright>Rabea Altaradeh</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Pictures\redis.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
