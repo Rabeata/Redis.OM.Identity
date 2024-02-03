@@ -34,11 +34,11 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     IUserAuthenticationTokenStore<TUser>,
     IUserAuthenticatorKeyStore<TUser>,
     IUserTwoFactorRecoveryCodeStore<TUser>
-    where TUser : IdentityUser<TKey>
-    where TKey : IEquatable<TKey>
-    where TUserClaim : IdentityUserClaim<TKey>, new()
-    where TUserLogin : IdentityUserLogin<TKey>, new()
-    where TUserToken : IdentityUserToken<TKey>, new()
+    where TUser : IdentityUser
+    where TKey : IEquatable<Guid>
+    where TUserClaim : IdentityUserClaim, new()
+    where TUserLogin : IdentityUserLogin, new()
+    where TUserToken : IdentityUserToken, new()
 {
     /// <summary>
     /// Creates a new instance.
@@ -59,7 +59,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     public IdentityErrorDescriber ErrorDescriber { get; set; }
 
     /// <summary>
-    /// Called to create a new instance of a <see cref="IdentityUserClaim{TKey}"/>.
+    /// Called to create a new instance of a <see cref="IdentityUserClaim{Guid}"/>.
     /// </summary>
     /// <param name="user">The associated user.</param>
     /// <param name="claim">The associated claim.</param>
@@ -72,7 +72,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     }
 
     /// <summary>
-    /// Called to create a new instance of a <see cref="IdentityUserLogin{TKey}"/>.
+    /// Called to create a new instance of a <see cref="IdentityUserLogin{Guid}"/>.
     /// </summary>
     /// <param name="user">The associated user.</param>
     /// <param name="login">The associated login.</param>
@@ -89,7 +89,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     }
 
     /// <summary>
-    /// Called to create a new instance of a <see cref="IdentityUserToken{TKey}"/>.
+    /// Called to create a new instance of a <see cref="IdentityUserToken{Guid}"/>.
     /// </summary>
     /// <param name="user">The associated user.</param>
     /// <param name="loginProvider">The associated login provider.</param>
@@ -219,16 +219,16 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     /// Converts the provided <paramref name="id"/> to a strongly typed key object.
     /// </summary>
     /// <param name="id">The id to convert.</param>
-    /// <returns>An instance of <typeparamref name="TKey"/> representing the provided <paramref name="id"/>.</returns>
+    /// <returns>An instance of <typeparamref name="Guid"/> representing the provided <paramref name="id"/>.</returns>
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-        Justification = "TKey is annoated with RequiresUnreferencedCodeAttribute.All.")]
-    public virtual TKey? ConvertIdFromString(string? id)
+        Justification = "Guid is annoated with RequiresUnreferencedCodeAttribute.All.")]
+    public virtual Guid? ConvertIdFromString(string? id)
     {
         if (id == null)
         {
-            return default(TKey);
+            return default(Guid);
         }
-        return (TKey?)TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(id);
+        return (Guid?)TypeDescriptor.GetConverter(typeof(Guid)).ConvertFromInvariantString(id);
     }
 
     /// <summary>
@@ -236,9 +236,9 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     /// </summary>
     /// <param name="id">The id to convert.</param>
     /// <returns>An <see cref="string"/> representation of the provided <paramref name="id"/>.</returns>
-    public virtual string? ConvertIdToString(TKey id)
+    public virtual string? ConvertIdToString(Guid id)
     {
-        if (object.Equals(id, default(TKey)))
+        if (object.Equals(id, default(Guid)))
         {
             return null;
         }
@@ -312,7 +312,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     /// <param name="userId">The user's id.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>The user if it exists.</returns>
-    protected abstract Task<TUser?> FindUserAsync(TKey userId, CancellationToken cancellationToken);
+    protected abstract Task<TUser?> FindUserAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Return a user login with the matching userId, provider, providerKey if it exists.
@@ -322,7 +322,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     /// <param name="providerKey">The key provided by the <paramref name="loginProvider"/> to identify a user.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>The user login if it exists.</returns>
-    protected abstract Task<TUserLogin?> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken);
+    protected abstract Task<TUserLogin?> FindUserLoginAsync(Guid userId, string loginProvider, string providerKey, CancellationToken cancellationToken);
 
     /// <summary>
     /// Return a user login with  provider, providerKey if it exists.
@@ -997,14 +997,14 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
 public abstract class UserStoreBase<TUser, TRole, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
     UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken>,
     IUserRoleStore<TUser>
-    where TUser : IdentityUser<TKey>
-    where TRole : IdentityRole<TKey>
-    where TKey : IEquatable<TKey>
-    where TUserClaim : IdentityUserClaim<TKey>, new()
-    where TUserRole : IdentityUserRole<TKey>, new()
-    where TUserLogin : IdentityUserLogin<TKey>, new()
-    where TUserToken : IdentityUserToken<TKey>, new()
-    where TRoleClaim : IdentityRoleClaim<TKey>, new()
+    where TUser : IdentityUser
+    where TRole : IdentityRole
+    where TKey : IEquatable<Guid>
+    where TUserClaim : IdentityUserClaim, new()
+    where TUserRole : IdentityUserRole, new()
+    where TUserLogin : IdentityUserLogin, new()
+    where TUserToken : IdentityUserToken, new()
+    where TRoleClaim : IdentityRoleClaim, new()
 {
     /// <summary>
     /// Creates a new instance.
@@ -1013,7 +1013,7 @@ public abstract class UserStoreBase<TUser, TRole, [DynamicallyAccessedMembers(Dy
     public UserStoreBase(IdentityErrorDescriber describer) : base(describer) { }
 
     /// <summary>
-    /// Called to create a new instance of a <see cref="IdentityUserRole{TKey}"/>.
+    /// Called to create a new instance of a <see cref="IdentityUserRole{Guid}"/>.
     /// </summary>
     /// <param name="user">The associated user.</param>
     /// <param name="role">The associated role.</param>
@@ -1088,5 +1088,5 @@ public abstract class UserStoreBase<TUser, TRole, [DynamicallyAccessedMembers(Dy
     /// <param name="roleId">The role's id.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
     /// <returns>The user role if it exists.</returns>
-    protected abstract Task<TUserRole?> FindUserRoleAsync(TKey userId, TKey roleId, CancellationToken cancellationToken);
+    protected abstract Task<TUserRole?> FindUserRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken);
 }

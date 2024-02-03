@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Redis.OM.Modeling;
 using System;
 
 namespace Microsoft.AspNetCore.Identity;
@@ -8,27 +9,31 @@ namespace Microsoft.AspNetCore.Identity;
 /// <summary>
 /// Represents an authentication token for a user.
 /// </summary>
-/// <typeparam name="TKey">The type of the primary key used for users.</typeparam>
-public class IdentityUserToken<TKey> where TKey : IEquatable<TKey>
+[Document(StorageType = StorageType.Json, IdGenerationStrategyName = "Uuid4IdGenerationStrategy", Prefixes = new[] { nameof(IdentityUserToken) })]
+public class IdentityUserToken
 {
     /// <summary>
     /// Gets or sets the primary key of the user that the token belongs to.
     /// </summary>
-    public virtual TKey UserId { get; set; } = default!;
+    [Indexed] 
+    public virtual Guid UserId { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the LoginProvider this token is from.
     /// </summary>
+    [Indexed]
     public virtual string LoginProvider { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the name of the token.
     /// </summary>
+    [Indexed] 
     public virtual string Name { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the token value.
     /// </summary>
     [ProtectedPersonalData]
+    [Indexed]
     public virtual string? Value { get; set; }
 }

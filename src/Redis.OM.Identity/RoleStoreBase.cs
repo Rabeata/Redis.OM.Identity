@@ -23,13 +23,13 @@ namespace Microsoft.AspNetCore.Identity;
 public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey, TUserRole, TRoleClaim> :
     IQueryableRoleStore<TRole>,
     IRoleClaimStore<TRole>
-    where TRole : IdentityRole<TKey>
-    where TKey : IEquatable<TKey>
-    where TUserRole : IdentityUserRole<TKey>, new()
-    where TRoleClaim : IdentityRoleClaim<TKey>, new()
+    where TRole : IdentityRole
+    where TKey : IEquatable<Guid>
+    where TUserRole : IdentityUserRole, new()
+    where TRoleClaim : IdentityRoleClaim, new()
 {
     /// <summary>
-    /// Constructs a new instance of <see cref="RoleStoreBase{TRole, TKey, TUserRole, TRoleClaim}"/>.
+    /// Constructs a new instance of <see cref="RoleStoreBase{TRole, Guid, TUserRole, TRoleClaim}"/>.
     /// </summary>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
     public RoleStoreBase(IdentityErrorDescriber describer)
@@ -118,16 +118,16 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
     /// Converts the provided <paramref name="id"/> to a strongly typed key object.
     /// </summary>
     /// <param name="id">The id to convert.</param>
-    /// <returns>An instance of <typeparamref name="TKey"/> representing the provided <paramref name="id"/>.</returns>
+    /// <returns>An instance of <typeparamref name="Guid"/> representing the provided <paramref name="id"/>.</returns>
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-        Justification = "TKey is annoated with RequiresUnreferencedCodeAttribute.All.")]
-    public virtual TKey? ConvertIdFromString(string? id)
+        Justification = "Guid is annoated with RequiresUnreferencedCodeAttribute.All.")]
+    public virtual Guid? ConvertIdFromString(string? id)
     {
         if (id == null)
         {
-            return default(TKey);
+            return default(Guid);
         }
-        return (TKey?)TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(id);
+        return (Guid?)TypeDescriptor.GetConverter(typeof(Guid)).ConvertFromInvariantString(id);
     }
 
     /// <summary>
@@ -135,9 +135,9 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
     /// </summary>
     /// <param name="id">The id to convert.</param>
     /// <returns>An <see cref="string"/> representation of the provided <paramref name="id"/>.</returns>
-    public virtual string? ConvertIdToString(TKey id)
+    public virtual string? ConvertIdToString(Guid id)
     {
-        if (id.Equals(default(TKey)))
+        if (id.Equals(default(Guid)))
         {
             return null;
         }

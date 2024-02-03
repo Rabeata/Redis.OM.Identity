@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Redis.OM.Modeling;
 using System;
 using System.Security.Claims;
 
@@ -9,27 +10,32 @@ namespace Microsoft.AspNetCore.Identity;
 /// <summary>
 /// Represents a claim that is granted to all users within a role.
 /// </summary>
-/// <typeparam name="TKey">The type of the primary key of the role associated with this claim.</typeparam>
-public class IdentityRoleClaim<TKey> where TKey : IEquatable<TKey>
+[Document(StorageType = StorageType.Json, IdGenerationStrategyName = "Uuid4IdGenerationStrategy", Prefixes = new[] { nameof(IdentityRoleClaim) })]
+public class IdentityRoleClaim
 {
     /// <summary>
     /// Gets or sets the identifier for this role claim.
     /// </summary>
-    public virtual int Id { get; set; } = default!;
+    [Indexed]
+    [RedisIdField]
+    public virtual Guid Id { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the of the primary key of the role associated with this claim.
     /// </summary>
-    public virtual TKey RoleId { get; set; } = default!;
+    [Indexed]
+    public virtual Guid RoleId { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the claim type for this claim.
     /// </summary>
+    [Indexed]
     public virtual string? ClaimType { get; set; }
 
     /// <summary>
     /// Gets or sets the claim value for this claim.
     /// </summary>
+    [Indexed]
     public virtual string? ClaimValue { get; set; }
 
     /// <summary>
