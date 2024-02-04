@@ -10,34 +10,19 @@ using System.Security.Claims;
 namespace Redis.OM.Identity;
 
 /// <summary>
-/// Creates a new instance of a persistence store for the specified user type.
-/// </summary>
-/// <typeparam name="TUser">The type representing a user.</typeparam>
-public class UserOnlyStore<TUser> : UserOnlyStore<TUser, IdentityDbContext> where TUser : IdentityUser, new()
-{
-    /// <summary>
-    /// Constructs a new instance of <see cref="UserOnlyStore{TUser}"/>.
-    /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
-    /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public UserOnlyStore(IdentityDbContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
-}
-
-/// <summary>
 /// Represents a new instance of a persistence store for the specified user and role types.
 /// </summary>
 /// <typeparam name="TUser">The type representing a user.</typeparam>
 /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-public class UserOnlyStore<TUser, TContext> : UserOnlyStore<TUser, TContext, IdentityUserClaim, IdentityUserLogin, IdentityUserToken>
+public class UserOnlyStore<TUser> : UserOnlyStore<TUser, IdentityUserClaim, IdentityUserLogin, IdentityUserToken>
     where TUser : IdentityUser
-    where TContext : IdentityDbContext
 {
     /// <summary>
     /// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext}"/>.
     /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
+    /// <param name="context">The <see cref="RedisConnectionProvider"/>.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+    public UserOnlyStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null) : base(db, describer) { }
 }
 
 /// <summary>
@@ -48,7 +33,7 @@ public class UserOnlyStore<TUser, TContext> : UserOnlyStore<TUser, TContext, Ide
 /// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
 /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
 /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
-public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> :
+public class UserOnlyStore<TUser, TUserClaim, TUserLogin, TUserToken> :
     UserStoreBase<TUser, TUserClaim, TUserLogin, TUserToken>,
     IUserLoginStore<TUser>,
     IUserClaimStore<TUser>,
@@ -63,7 +48,6 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
     IUserTwoFactorRecoveryCodeStore<TUser>,
     IProtectedUserStore<TUser>
     where TUser : IdentityUser
-    where TContext : IdentityDbContext
     where TUserClaim : IdentityUserClaim, new()
     where TUserLogin : IdentityUserLogin, new()
     where TUserToken : IdentityUserToken, new()
@@ -73,37 +57,44 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
     /// </summary>
     /// <param name="context">The context used to access the store.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
-    public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null) : base(describer ?? new IdentityErrorDescriber())
+    public UserOnlyStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null) : base(describer ?? new IdentityErrorDescriber())
     {
-        ArgumentNullException.ThrowIfNull(context);
-        Context = context;
+        ArgumentNullException.ThrowIfNull(db);
+        Context = db;
     }
 
     /// <summary>
     /// Gets the database context for this store.
     /// </summary>
-    public virtual TContext Context { get; private set; }
+    public virtual RedisConnectionProvider Context { get; private set; }
 
     /// <summary>
     /// A navigation property for the users the store contains.
     /// </summary>
-    public override IRedisCollection<TUser> Users { get { return (IRedisCollection<TUser>)Context.Users; } }
+    public override IRedisCollection<TUser> UsersSet { get { return Context.RedisCollection<TUser>(); } }
 
     /// <summary>
     /// DbSet of user claims.
     /// </summary>
-    protected IRedisCollection<TUserClaim> UserClaims { get { return (IRedisCollection<TUserClaim>)Context.UserClaims; } }
+    protected IRedisCollection<TUserClaim> UserClaims { get { return Context.RedisCollection<TUserClaim>(); } }
 
     /// <summary>
     /// DbSet of user logins.
     /// </summary>
-    protected IRedisCollection<TUserLogin> UserLogins { get { return (IRedisCollection<TUserLogin>)Context.UserLogins; } }
+    protected IRedisCollection<TUserLogin> UserLogins { get { return Context.RedisCollection<TUserLogin>(); } }
 
     /// <summary>
     /// DbSet of user tokens.
     /// </summary>
-    protected IRedisCollection<TUserToken> UserTokens { get { return (IRedisCollection<TUserToken>)Context.UserTokens; } }
+    protected IRedisCollection<TUserToken> UserTokens { get { return Context.RedisCollection<TUserToken>(); } }
 
+    public override IQueryable<TUser> Users
+    {
+        get
+        {
+            return UsersSet.AsQueryable();
+        }
+    }
 
     /// <summary>
     /// Creates the specified <paramref name="user"/> in the user store.
@@ -116,7 +107,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(user);
-        Users.Insert(user);
+        UsersSet.Insert(user);
         return IdentityResult.Success;
     }
 
@@ -136,7 +127,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
         user.ConcurrencyStamp = Guid.NewGuid().ToString();
         try
         {
-            await Users.UpdateAsync(user);
+            await UsersSet.UpdateAsync(user);
         }
         catch (RedisCommandException)
         {
@@ -159,7 +150,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
 
         try
         {
-            await Context.Users.DeleteAsync(user);
+            await UsersSet.DeleteAsync(user);
         }
         catch (RedisCommandException)
         {
@@ -181,7 +172,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
         var id = ConvertIdFromString(userId);
-        return Users.FindByIdAsync(userId);
+        return UsersSet.FindByIdAsync(userId);
     }
 
     /// <summary>
@@ -197,7 +188,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
 
-        return Users.FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName);
+        return UsersSet.FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName);
     }
 
     /// <summary>
@@ -208,7 +199,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
     /// <returns>The user if it exists.</returns>
     protected override Task<TUser?> FindUserAsync(Guid userId, CancellationToken cancellationToken)
     {
-        return Users.SingleOrDefaultAsync(u => u.Id == userId);
+        return UsersSet.SingleOrDefaultAsync(u => u.Id == userId);
     }
 
     /// <summary>
@@ -246,8 +237,8 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
     {
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(user);
-
-        return await Task.FromResult(UserClaims.Where(uc => uc.UserId == user.Id).Select(c => c.ToClaim()).ToList());
+        var claims = UserClaims.Where(uc => uc.UserId == user.Id);
+        return await Task.FromResult(claims.Select(c => c.ToClaim()).ToList());
     }
 
     /// <summary>
@@ -369,9 +360,9 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(user);
         var userId = user.Id;
+        var logins = UserLogins.Where(l => l.UserId == userId);
         return await Task.FromResult(
-            UserLogins.Where(l => l.UserId == userId)
-            .Select(l => new UserLoginInfo(l.LoginProvider, l.ProviderKey, l.ProviderDisplayName)).ToList());
+           logins.Select(l => new UserLoginInfo(l.LoginProvider, l.ProviderKey, l.ProviderDisplayName)).ToList());
     }
 
     /// <summary>
@@ -409,7 +400,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
 
-        return Users.SingleOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
+        return UsersSet.SingleOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
     }
 
     /// <summary>
@@ -427,7 +418,7 @@ public class UserOnlyStore<TUser, TContext, TUserClaim, TUserLogin, TUserToken> 
         ArgumentNullException.ThrowIfNull(claim);
 
         var userClaims = UserClaims.Where(x => x.ClaimValue == claim.Value && x.ClaimType == claim.Type).Select(x => x.UserId).ToList();
-        var query = Users.Where(x => userClaims.Contains(x.Id));
+        var query = UsersSet.Where(x => userClaims.Contains(x.Id));
 
         return await Task.FromResult(query.ToList());
     }

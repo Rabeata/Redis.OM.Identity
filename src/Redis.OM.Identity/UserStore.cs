@@ -20,24 +20,24 @@ public class UserStore : UserStore<IdentityUser>
     /// <summary>
     /// Constructs a new instance of <see cref="UserStore"/>.
     /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
+    /// <param name="context">The <see cref="RedisConnectionProvider"/>.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public UserStore(IdentityDbContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+    public UserStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null) : base(db, describer) { }
 }
 
 /// <summary>
 /// Creates a new instance of a persistence store for the specified user type.
 /// </summary>
 /// <typeparam name="TUser">The type representing a user.</typeparam>
-public class UserStore<TUser> : UserStore<TUser, IdentityRole, IdentityDbContext>
+public class UserStore<TUser> : UserStore<TUser, IdentityRole>
     where TUser : IdentityUser, new()
 {
     /// <summary>
     /// Constructs a new instance of <see cref="UserStore{TUser}"/>.
     /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
+    /// <param name="context">The <see cref="RedisConnectionProvider"/>.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public UserStore(IdentityDbContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+    public UserStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null) : base(db, describer) { }
 }
 
 /// <summary>
@@ -46,17 +46,16 @@ public class UserStore<TUser> : UserStore<TUser, IdentityRole, IdentityDbContext
 /// <typeparam name="TUser">The type representing a user.</typeparam>
 /// <typeparam name="TRole">The type representing a role.</typeparam>
 /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-public class UserStore<TUser, TRole, TContext> : UserStore<TUser, TRole, TContext, IdentityUserClaim, IdentityUserRole, IdentityUserLogin, IdentityUserToken, IdentityRoleClaim>
+public class UserStore<TUser, TRole> : UserStore<TUser, TRole, IdentityUserClaim, IdentityUserRole, IdentityUserLogin, IdentityUserToken, IdentityRoleClaim>
     where TUser : IdentityUser
     where TRole : IdentityRole
-    where TContext : IdentityDbContext
 {
     /// <summary>
     /// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext}"/>.
     /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
+    /// <param name="context">The <see cref="RedisConnectionProvider"/>.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public UserStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+    public UserStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null) : base(db, describer) { }
 }
 
 /// <summary>
@@ -70,12 +69,11 @@ public class UserStore<TUser, TRole, TContext> : UserStore<TUser, TRole, TContex
 /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
 /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
 /// <typeparam name="TRoleClaim">The type representing a role claim.</typeparam>
-public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
+public class UserStore<TUser, TRole, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
     UserStoreBase<TUser, TRole, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim>,
     IProtectedUserStore<TUser>
     where TUser : IdentityUser
     where TRole : IdentityRole
-    where TContext : IdentityDbContext
     where TUserClaim : IdentityUserClaim, new()
     where TUserRole : IdentityUserRole, new()
     where TUserLogin : IdentityUserLogin, new()
@@ -87,27 +85,35 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
     /// </summary>
     /// <param name="context">The context used to access the store.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
-    public UserStore(TContext context, IdentityErrorDescriber? describer = null) : base(describer ?? new IdentityErrorDescriber())
+    public UserStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null) : base(describer ?? new IdentityErrorDescriber())
     {
-        ArgumentNullException.ThrowIfNull(context);
-        Context = context;
+        ArgumentNullException.ThrowIfNull(db);
+        Context = db;
     }
 
     /// <summary>
     /// Gets the database context for this store.
     /// </summary>
-    public virtual TContext Context { get; private set; }
+    public virtual RedisConnectionProvider Context { get; private set; }
 
     /// <summary>
     /// A navigation property for the users the store contains.
     /// </summary>
-    public override IRedisCollection<TUser> Users { get { return (IRedisCollection<TUser>)Context.Users; } }
+    public override IRedisCollection<TUser> UsersSet { get { return Context.RedisCollection<TUser>(); } }
 
-    private IRedisCollection<TRole> Roles { get { return (IRedisCollection<TRole>)Context.Roles; } }
-    private IRedisCollection<TUserClaim> UserClaims { get { return (IRedisCollection<TUserClaim>)Context.UserClaims; } }
-    private IRedisCollection<TUserRole> UserRoles { get { return (IRedisCollection<TUserRole>)Context.UserRoles; } }
-    private IRedisCollection<TUserLogin> UserLogins { get { return (IRedisCollection<TUserLogin>)Context.UserLogins; } }
-    private IRedisCollection<TUserToken> UserTokens { get { return (IRedisCollection<TUserToken>)Context.UserTokens; } }
+    private IRedisCollection<TRole> Roles { get { return Context.RedisCollection<TRole>(); } }
+    private IRedisCollection<TUserClaim> UserClaims { get { return Context.RedisCollection<TUserClaim>(); } }
+    private IRedisCollection<TUserRole> UserRoles { get { return Context.RedisCollection<TUserRole>(); } }
+    private IRedisCollection<TUserLogin> UserLogins { get { return Context.RedisCollection<TUserLogin>(); } }
+    private IRedisCollection<TUserToken> UserTokens { get { return Context.RedisCollection<TUserToken>(); } }
+
+    public override IQueryable<TUser> Users
+    {
+        get
+        {
+            return UsersSet.AsQueryable();
+        }
+    }
 
     /// <summary>
     /// Creates the specified <paramref name="user"/> in the user store.
@@ -120,7 +126,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(user);
-        await Users.InsertAsync(user);
+        await UsersSet.InsertAsync(user);
         return IdentityResult.Success;
     }
 
@@ -140,7 +146,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
 
         try
         {
-            await Users.UpdateAsync(user);
+            await UsersSet.UpdateAsync(user);
         }
         catch (RedisCommandException)
         {
@@ -163,7 +169,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
 
         try
         {
-            await Users.DeleteAsync(user);
+            await UsersSet.DeleteAsync(user);
         }
         catch (RedisCommandException)
         {
@@ -184,7 +190,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
-        return await Users.FindByIdAsync(userId);
+        return await UsersSet.FindByIdAsync(userId);
     }
 
     /// <summary>
@@ -200,7 +206,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
 
-        return await Users.FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName);
+        return await UsersSet.FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName);
     }
 
     /// <summary>
@@ -234,7 +240,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
     /// <returns>The user if it exists.</returns>
     protected override async Task<TUser?> FindUserAsync(Guid userId, CancellationToken cancellationToken)
     {
-        return await Users.SingleOrDefaultAsync(u => u.Id == userId);
+        return await UsersSet.SingleOrDefaultAsync(u => u.Id == userId);
     }
 
     /// <summary>
@@ -362,7 +368,8 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(user);
 
-        return await Task.FromResult(UserClaims.Where(uc => uc.UserId == user.Id).Select(c => c.ToClaim()).ToList());
+        var claims = UserClaims.Where(uc => uc.UserId == (user.Id)).ToList();
+        return await Task.FromResult(claims.Select(c => c.ToClaim()).ToList());
     }
 
     /// <summary>
@@ -486,8 +493,8 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(user);
         var userId = user.Id;
-        return await Task.FromResult(UserLogins.Where(l => l.UserId.Equals(userId))
-            .Select(l => new UserLoginInfo(l.LoginProvider, l.ProviderKey, l.ProviderDisplayName)).ToList());
+        var logins = UserLogins.Where(l => l.UserId == (userId));
+        return await Task.FromResult(logins.Select(l => new UserLoginInfo(l.LoginProvider, l.ProviderKey, l.ProviderDisplayName)).ToList());
     }
 
     /// <summary>
@@ -525,7 +532,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
 
-        return Users.SingleOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
+        return UsersSet.SingleOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
     }
 
     /// <summary>
@@ -543,7 +550,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         ArgumentNullException.ThrowIfNull(claim);
 
         var userClaims = UserClaims.Where(x => x.ClaimValue == claim.Value && x.ClaimType == claim.Type).Select(x => x.UserId).ToList();
-        var query = Users.Where(x => userClaims.Contains(x.Id));
+        var query = UsersSet.Where(x => userClaims.Contains(x.Id));
 
         return await Task.FromResult(query.ToList());
     }
@@ -566,7 +573,7 @@ public class UserStore<TUser, TRole, TContext, [DynamicallyAccessedMembers(Dynam
         if (role != null)
         {
             var usersInRole = UserRoles.Where(x => x.RoleId == role.Id).Select(x => x.UserId).ToList();
-            var users = Users.Where(x => usersInRole.Contains(x.Id)).ToList();
+            var users = UsersSet.Where(x => usersInRole.Contains(x.Id)).ToList();
             return users;
         }
         return new List<TUser>();

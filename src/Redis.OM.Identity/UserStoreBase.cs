@@ -26,6 +26,7 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     IUserEmailStore<TUser>,
     IUserLockoutStore<TUser>,
     IUserPhoneNumberStore<TUser>,
+    IQueryableUserStore<TUser>,
     IUserTwoFactorStore<TUser>,
     IUserAuthenticationTokenStore<TUser>,
     IUserAuthenticatorKeyStore<TUser>,
@@ -52,6 +53,20 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     /// Gets or sets the <see cref="IdentityErrorDescriber"/> for any error that occurred with the current operation.
     /// </summary>
     public IdentityErrorDescriber ErrorDescriber { get; set; }
+
+    /// <summary>
+    /// A navigation property for the users the store contains.
+    /// </summary>
+    public abstract IRedisCollection<TUser> UsersSet
+    {
+        get;
+    }
+
+    /// <summary>
+    /// A navigation property for the users the store contains.
+    /// </summary>
+    public abstract IQueryable<TUser> Users { get; }
+
 
     /// <summary>
     /// Called to create a new instance of a <see cref="IdentityUserClaim{Guid}"/>.
@@ -249,14 +264,6 @@ public abstract class UserStoreBase<TUser, [DynamicallyAccessedMembers(Dynamical
     /// The <see cref="Task"/> that represents the asynchronous operation, containing the user matching the specified <paramref name="normalizedUserName"/> if it exists.
     /// </returns>
     public abstract Task<TUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// A navigation property for the users the store contains.
-    /// </summary>
-    public abstract IRedisCollection<TUser> Users
-    {
-        get;
-    }
 
     /// <summary>
     /// Sets the password hash for a user.

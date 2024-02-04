@@ -18,6 +18,7 @@ namespace Redis.OM.Identity;
 /// <typeparam name="TUserRole">The type of the class representing a user role.</typeparam>
 /// <typeparam name="TRoleClaim">The type of the class representing a role claim.</typeparam>
 public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TUserRole, TRoleClaim> :
+    IQueryableRoleStore<TRole>,
     IRoleClaimStore<TRole>
     where TRole : IdentityRole
     where TUserRole : IdentityUserRole, new()
@@ -40,6 +41,22 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
     /// Gets or sets the <see cref="IdentityErrorDescriber"/> for any error that occurred with the current operation.
     /// </summary>
     public IdentityErrorDescriber ErrorDescriber { get; set; }
+
+    /// <summary>
+    /// A navigation property for the roles the store contains.
+    /// </summary>
+    public abstract IRedisCollection<TRole> RolesSet
+    {
+        get;
+    }
+
+    /// <summary>
+    /// A navigation property for the roles the store contains.
+    /// </summary>
+    public abstract IQueryable<TRole> Roles
+    {
+        get;
+    }
 
     /// <summary>
     /// Creates a new role in a store as an asynchronous operation.
@@ -224,13 +241,8 @@ public abstract class RoleStoreBase<TRole, [DynamicallyAccessedMembers(Dynamical
     /// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
     public abstract Task RemoveClaimAsync(TRole role, Claim claim, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// A navigation property for the roles the store contains.
-    /// </summary>
-    public abstract IRedisCollection<TRole> Roles
-    {
-        get;
-    }
+ 
+
 
     /// <summary>
     /// Creates a entity representing a role claim.

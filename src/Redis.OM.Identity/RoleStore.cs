@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 using Redis.OM.Identity.Models;
 using Redis.OM.Searching;
 using StackExchange.Redis;
@@ -13,35 +14,18 @@ namespace Redis.OM.Identity;
 /// <summary>
 /// Creates a new instance of a persistence store for roles.
 /// </summary>
-/// <typeparam name="TRole">The type of the class representing a role</typeparam>
-public class RoleStore<TRole> : RoleStore<TRole, IdentityDbContext>
-    where TRole : IdentityRole
-{
-    /// <summary>
-    /// Constructs a new instance of <see cref="RoleStore{TRole}"/>.
-    /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
-    /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public RoleStore(IdentityDbContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
-}
-
-
-/// <summary>
-/// Creates a new instance of a persistence store for roles.
-/// </summary>
 /// <typeparam name="TRole">The type of the class representing a role.</typeparam>
-/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-public class RoleStore<TRole, TContext> : RoleStore<TRole, TContext, IdentityUserRole, IdentityRoleClaim>,
+public class RoleStore<TRole> : RoleStore<TRole, IdentityUserRole, IdentityRoleClaim>,
+    IQueryableRoleStore<TRole>,
     IRoleClaimStore<TRole>
     where TRole : IdentityRole
-    where TContext : IdentityDbContext
 {
     /// <summary>
     /// Constructs a new instance of <see cref="RoleStore{TRole, TContext}"/>.
     /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
+    /// <param name="context">The <see cref="RedisConnectionProvider"/>.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public RoleStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+    public RoleStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null) : base(db, describer) { }
 }
 
 /// <summary>
@@ -51,22 +35,22 @@ public class RoleStore<TRole, TContext> : RoleStore<TRole, TContext, IdentityUse
 /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
 /// <typeparam name="TUserRole">The type of the class representing a user role.</typeparam>
 /// <typeparam name="TRoleClaim">The type of the class representing a role claim.</typeparam>
-public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
+public class RoleStore<TRole, TUserRole, TRoleClaim> :
+    IQueryableRoleStore<TRole>,
     IRoleClaimStore<TRole>
     where TRole : IdentityRole
-    where TContext : IdentityDbContext
     where TUserRole : IdentityUserRole, new()
     where TRoleClaim : IdentityRoleClaim, new()
 {
     /// <summary>
     /// Constructs a new instance of <see cref="RoleStore{TRole, TContext, TUserRole, TRoleClaim}"/>.
     /// </summary>
-    /// <param name="context">The <see cref="IdentityDbContext"/>.</param>
+    /// <param name="context">The <see cref="RedisConnectionProvider"/>.</param>
     /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-    public RoleStore(TContext context, IdentityErrorDescriber? describer = null)
+    public RoleStore(RedisConnectionProvider db, IdentityErrorDescriber? describer = null)
     {
-        ArgumentNullException.ThrowIfNull(context);
-        Context = context;
+        ArgumentNullException.ThrowIfNull(db);
+        Context = db;
         ErrorDescriber = describer ?? new IdentityErrorDescriber();
     }
 
@@ -75,16 +59,26 @@ public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
     /// <summary>
     /// Gets the database context for this store.
     /// </summary>
-    public virtual TContext Context { get; private set; }
+    public virtual RedisConnectionProvider Context { get; private set; }
 
 
     /// <summary>
     /// A navigation property for the roles the store contains.
     /// </summary>
-    public virtual IRedisCollection<TRole> Roles => (IRedisCollection<TRole>)Context.Roles;
+    public virtual IRedisCollection<TRole> RolesSet => Context.RedisCollection<TRole>();
 
+    /// <summary>
+    /// A navigation property for the roles the store contains.
+    /// </summary>
+    public virtual IQueryable<TRole> Roles
+    {
+        get
+        {
+            return RolesSet.AsQueryable();
+        }
+    }
 
-    private IRedisCollection<TRoleClaim> RoleClaims { get { return (IRedisCollection<TRoleClaim>)Context.RoleClaims; } }
+    private IRedisCollection<TRoleClaim> RoleClaims { get { return Context.RedisCollection<TRoleClaim>(); } }
 
     /// <summary>
     /// Gets or sets the <see cref="IdentityErrorDescriber"/> for any error that occurred with the current operation.
@@ -102,7 +96,7 @@ public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(role);
-        await Context.Roles.InsertAsync(role);
+        await RolesSet.InsertAsync(role);
         return IdentityResult.Success;
     }
 
@@ -122,7 +116,7 @@ public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
 
         try
         {
-            await Context.Roles.UpdateAsync(role);
+            await RolesSet.UpdateAsync(role);
         }
         catch (RedisCommandException)
         {
@@ -145,7 +139,7 @@ public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
 
         try
         {
-            await Context.Roles.DeleteAsync(role);
+            await RolesSet.DeleteAsync(role);
         }
         catch (RedisCommandException)
         {
@@ -236,8 +230,8 @@ public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
-
-        return Roles.FirstOrDefaultAsync(u => u.Id == Guid.Parse(id));
+        var roleId = Guid.Parse(id);
+        return RolesSet.FirstOrDefaultAsync(u => u.Id == roleId);
     }
 
     /// <summary>
@@ -250,7 +244,7 @@ public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();
-        return Roles.FirstOrDefaultAsync(r => r.NormalizedName == normalizedName);
+        return RolesSet.FirstOrDefaultAsync(r => r.NormalizedName == normalizedName);
     }
 
     /// <summary>
@@ -307,7 +301,9 @@ public class RoleStore<TRole, TContext, TUserRole, TRoleClaim> :
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(role);
 
-        return await Task.FromResult(RoleClaims.Where(rc => rc.RoleId == role.Id).Select(c => new Claim(c.ClaimType!, c.ClaimValue!)).ToList());
+        var claims = RoleClaims.Where(rc => rc.RoleId == (role.Id)).ToList();
+
+        return claims.Select(c => new Claim(c.ClaimType, c.ClaimValue)).ToList();
     }
 
     /// <summary>

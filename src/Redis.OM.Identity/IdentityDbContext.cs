@@ -4,18 +4,18 @@ using Redis.OM.Searching;
 
 namespace Redis.OM.Identity;
 
-/// <summary>
-/// Base class for the Entity Framework database context used for identity.
-/// </summary>
-public class IdentityDbContext : IdentityDbContext<IdentityUser, IdentityRole>
-{
-    /// <summary>
-    /// Initializes a new instance of <see cref="IdentityDbContext"/>.
-    /// </summary>
-    /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
-    public IdentityDbContext(RedisConnectionProvider db) : base(db) { }
+///// <summary>
+///// Base class for the Entity Framework database context used for identity.
+///// </summary>
+//public class IdentityDbContext : IdentityDbContext<IdentityUser, IdentityRole>
+//{
+//    /// <summary>
+//    /// Initializes a new instance of <see cref="IdentityDbContext"/>.
+//    /// </summary>
+//    /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
+//    public IdentityDbContext(RedisConnectionProvider db) : base(db) { }
 
-}
+//}
 
 /// <summary>
 /// Base class for the Entity Framework database context used for identity.
@@ -31,6 +31,8 @@ public class IdentityDbContext<TUser> : IdentityDbContext<TUser, IdentityRole> w
 
 
 }
+
+
 
 /// <summary>
 /// Base class for the Entity Framework database context used for identity.
@@ -55,7 +57,6 @@ public class IdentityDbContext<TUser, TRole> : IdentityDbContext<TUser, TRole, I
 /// </summary>
 /// <typeparam name="TUser">The type of user objects.</typeparam>
 /// <typeparam name="TRole">The type of role objects.</typeparam>
-/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
 /// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
 /// <typeparam name="TUserRole">The type of the user role object.</typeparam>
 /// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
@@ -88,37 +89,37 @@ public abstract class IdentityDbContext<TUser, TRole, TUserClaim, TUserRole, TUs
     }
 
     /// <summary>
-    /// Gets or sets the <see cref="DbSet{TEntity}"/> of User roles.
+    /// Gets or sets the <see cref="IRedisCollection{TEntity}"/> of User roles.
     /// </summary>
     public virtual IRedisCollection<TUserRole> UserRoles { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets the <see cref="DbSet{TEntity}"/> of roles.
+    /// Gets or sets the <see cref="IRedisCollection{TEntity}"/> of roles.
     /// </summary>
     public virtual IRedisCollection<TRole> Roles { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets the <see cref="DbSet{TEntity}"/> of role claims.
+    /// Gets or sets the <see cref="IRedisCollection{TEntity}"/> of role claims.
     /// </summary>
     public virtual IRedisCollection<TRoleClaim> RoleClaims { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets the <see cref="DbSet{TEntity}"/> of Users.
+    /// Gets or sets the <see cref="IRedisCollection{TEntity}"/> of Users.
     /// </summary>
     public virtual IRedisCollection<TUser> Users { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets the <see cref="DbSet{TEntity}"/> of User claims.
+    /// Gets or sets the <see cref="IRedisCollection{TEntity}"/> of User claims.
     /// </summary>
     public virtual IRedisCollection<TUserClaim> UserClaims { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets the <see cref="DbSet{TEntity}"/> of User logins.
+    /// Gets or sets the <see cref="IRedisCollection{TEntity}"/> of User logins.
     /// </summary>
     public virtual IRedisCollection<TUserLogin> UserLogins { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets the <see cref="DbSet{TEntity}"/> of User tokens.
+    /// Gets or sets the <see cref="IRedisCollection{TEntity}"/> of User tokens.
     /// </summary>
     public virtual IRedisCollection<TUserToken> UserTokens { get; set; } = default!;
 
