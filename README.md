@@ -57,3 +57,7 @@ Add the indexes creator:
         await _provider.Connection.CreateIndexAsync(typeof(IdentityUserLogin));
         await _provider.Connection.CreateIndexAsync(typeof(IdentityUserRole));
         await _provider.Connection.CreateIndexAsync(typeof(IdentityUserToken));
+
+
+
+        https://github.com/aspnet/Identity/tree/b865d5878623077eeb715e600d75fa9c24dbb5a1/test/Microsoft.AspNetCore.Identity.EntityFrameworkCore.Test
