@@ -329,8 +329,11 @@ public class UserStore<TUser, TRole, [DynamicallyAccessedMembers(DynamicallyAcce
 
 
         var userRoles = UserRoles.Where(x => x.UserId == user.Id).Select(x => x.RoleId).ToList();
-        var roles = Roles.Where(x => userRoles.Contains(x.Id)).ToList();
-        return await Task.FromResult<IList<string>>(roles.Where(x => x.Name != null).Select(z => z.Name!).ToList());
+        if (userRoles.Count > 0) {
+            var roles = Roles.Where(x => userRoles.Contains(x.Id)).ToList();
+            return await Task.FromResult<IList<string>>(roles.Where(x => x.Name != null).Select(z => z.Name!).ToList());
+        }
+        return await Task.FromResult<IList<string>>(Array.Empty<string>());
     }
 
     /// <summary>
