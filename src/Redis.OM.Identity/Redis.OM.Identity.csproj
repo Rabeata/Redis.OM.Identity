@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>Redis OM Identity</Title>
-    <Version>0.1.2</Version>
+    <Version>0.1.3</Version>
     <Authors>Rabea Altaradeh</Authors>
     <Company>Inab Technologies</Company>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
